@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEXR | پنل گیمینگ WireGuard (100 TB)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #05060c;
+            color: #f4f4f5;
+            background-image:
+                radial-gradient(circle at 18% 12%, rgba(139, 92, 246, 0.22), transparent 40%),
+                radial-gradient(circle at 84% 78%, rgba(37, 99, 235, 0.2), transparent 42%);
+            min-height: 100vh;
+        }
+        .vexr-panel {
+            background: rgba(13, 15, 28, 0.92);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(139, 92, 246, 0.34);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+        }
+        .ref-field-box {
+            background: rgba(10, 12, 22, 0.95);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-radius: 16px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .ref-field-box:focus-within {
+            border-color: rgba(168, 85, 247, 0.8);
+            box-shadow: 0 0 18px rgba(139, 92, 246, 0.2);
+        }
+        .sub-shell {
+            background: linear-gradient(165deg, rgba(16, 19, 38, 0.95), rgba(8, 10, 22, 0.98));
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            box-shadow:
+                0 0 50px rgba(109, 40, 217, 0.2),
+                0 22px 55px rgba(0, 0, 0, 0.75);
+        }
+        .cfg-neon-card {
+            background: linear-gradient(155deg, rgba(24, 24, 48, 0.88), rgba(11, 13, 27, 0.95));
+            border: 1px solid rgba(168, 85, 247, 0.42);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                0 10px 28px rgba(0, 0, 0, 0.55),
+                0 0 22px rgba(124, 58, 237, 0.14);
+        }
+        .cfg-neon-card-blue {
+            background: linear-gradient(155deg, rgba(16, 27, 52, 0.9), rgba(9, 13, 27, 0.96));
+            border: 1px solid rgba(59, 130, 246, 0.42);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                0 10px 28px rgba(0, 0, 0, 0.55),
+                0 0 22px rgba(37, 99, 235, 0.15);
+        }
+        .sub-dl-btn {
+            background: linear-gradient(90deg, #f3f4f6 0%, #ddd6fe 52%, #bfdbfe 100%);
+            color: #09090b;
+            box-shadow: 0 6px 22px rgba(167, 139, 250, 0.28);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .sub-dl-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 28px rgba(129, 140, 248, 0.42);
+        }
+        .vexr-success-panel {
+            background: linear-gradient(160deg, rgba(16, 48, 38, 0.78), rgba(11, 16, 28, 0.92));
+            border: 1px solid rgba(34, 197, 94, 0.45);
+            box-shadow: 0 0 28px rgba(34, 197, 94, 0.14);
+        }
+        .vexr-btn-grad {
+            background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .vexr-btn-grad:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 26px rgba(124, 58, 237, 0.5);
+        }
+        .vexr-input {
+            background: rgba(7, 8, 16, 0.92);
+            border: 1px solid rgba(139, 92, 246, 0.32);
+            color: #fff;
+        }
+        .vexr-input:focus {
+            outline: none;
+            border-color: #a855f7;
+        }
+        .nav-active {
+            background: linear-gradient(90deg, rgba(124, 58, 237, 0.45), rgba(37, 99, 235, 0.25));
+            border: 1px solid rgba(168, 85, 247, 0.55);
+            color: #ffffff;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body class="p-3 sm:p-5">
+
+    <!-- ==================== صفحه قفل ورود به پنل (رمز: VEXR) ==================== -->
+    <div id="lockScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+        <div class="sub-shell rounded-3xl w-full max-w-md p-7 text-center relative overflow-hidden">
+            <div class="pointer-events-none absolute -top-20 -right-20 w-44 h-44 rounded-full bg-purple-600/25 blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-20 -left-20 w-44 h-44 rounded-full bg-blue-600/25 blur-3xl"></div>
+
+            <div class="relative">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-purple-600/40 mb-3">V</div>
+                <h1 class="text-2xl font-black bg-gradient-to-l from-purple-300 via-fuchsia-300 to-blue-300 bg-clip-text text-transparent">ورود به پنل VEXR</h1>
+                <p class="text-xs text-zinc-400 mt-1 mb-5">پنل گیمینگ WireGuard با ظرفیت کل ۱۰۰ ترابایت • رمز را وارد کنید</p>
+
+                <input type="password" id="panelPassInput" onkeydown="if(event.key==='Enter') unlockPanel()" placeholder="رمز عبور پنل را وارد کنید..." class="vexr-input w-full px-4 py-3 rounded-2xl text-xs text-center mb-3">
+                <button type="button" onclick="unlockPanel()" class="vexr-btn-grad w-full py-3 rounded-2xl text-xs font-black text-white">ورود به پنل</button>
+                <p id="panelPassError" class="text-red-400 text-xs mt-2.5 hidden">رمز عبور اشتباه است!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== نمای اختصاصی لینک ساب کاربر ==================== -->
+    <div id="subView" class="hidden min-h-screen flex items-center justify-center p-3 sm:p-5">
+        <div class="sub-shell rounded-[28px] w-full max-w-md p-4 sm:p-5 relative overflow-hidden space-y-4">
+            <div class="pointer-events-none absolute -top-24 -right-20 w-56 h-56 rounded-full bg-purple-600/25 blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-24 -left-20 w-56 h-56 rounded-full bg-blue-600/25 blur-3xl"></div>
+
+            <div class="relative flex items-center justify-between pt-1">
+                <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-5 rounded-full bg-gradient-to-b from-purple-400 to-blue-400 inline-block"></span>
+                    <h1 class="text-base font-black text-white">کانفیگ‌های اختصاصی</h1>
+                </div>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-400/35 text-purple-200">VEXR • 100TB</span>
+            </div>
+
+            <div id="subPassBox" class="hidden relative bg-black/50 border border-amber-500/35 rounded-2xl p-4 text-center">
+                <p class="text-xs text-amber-300 font-bold mb-2.5">🔒 این لینک اشتراک با رمز عبور محافظت شده است</p>
+                <input type="password" id="subPassInput" placeholder="رمز عبور را وارد کنید..." class="vexr-input w-full px-3.5 py-2.5 rounded-xl text-xs text-center mb-2.5">
+                <button onclick="unlockSub()" class="vexr-btn-grad w-full py-2.5 rounded-xl text-xs font-bold text-white">باز کردن اشتراک</button>
+                <p id="subPassErr" class="text-red-400 text-xs mt-2 hidden">رمز عبور اشتباه است</p>
+            </div>
+
+            <div id="subInfoBox" class="hidden relative space-y-3.5">
+
+                <!-- باکس خلاصه حجم کانفیگ و زمان (روز اعتبار) -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="cfg-neon-card rounded-2xl p-3 flex items-center justify-between">
+                        <div>
+                            <div class="text-[11px] text-purple-200">حجم کانفیگ</div>
+                            <div id="svSummaryTraffic" class="text-sm font-black text-white mt-0.5">1 TB</div>
+                        </div>
+                        <span class="text-base">📦</span>
+                    </div>
+                    <div class="cfg-neon-card-blue rounded-2xl p-3 flex items-center justify-between">
+                        <div>
+                            <div class="text-[11px] text-blue-200">زمان اعتبار</div>
+                            <div id="svSummaryDays" class="text-sm font-black text-white mt-0.5">30 روز</div>
+                        </div>
+                        <span class="text-base">⏳</span>
+                    </div>
+                </div>
+
+                <!-- کارت ۱: تانل گیمینگ -->
+                <div class="cfg-neon-card rounded-3xl p-4 space-y-3.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="space-y-2">
+                            <div id="svCard1Title" class="text-sm font-black text-white">تانل گیمینگ</div>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span id="svStatusBadge1" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-400/40 text-emerald-300">● فعال</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/15 border border-purple-400/35 text-purple-200">WireGuard</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-400/20 border border-amber-300/45 text-amber-200">👑 VIP</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-400/35 flex items-center justify-center text-xl text-purple-200 shrink-0">
+                            ◎
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-purple-400/20 text-[11px] text-zinc-300">
+                        <span class="font-mono text-purple-200" dir="ltr" id="svEndpoint1">wg.parszone2.ir:35853</span>
+                        <span class="font-bold text-white" id="svTraffic1">📦 1 TB</span>
+                        <span class="font-bold text-blue-200" id="svDays1">⏳ 30 روز</span>
+                    </div>
+
+                    <div class="flex items-center gap-2.5">
+                        <button onclick="openSubQrModal('game')" title="نمایش QR Code" class="w-12 h-12 rounded-2xl bg-black/50 border border-purple-400/40 text-purple-200 flex items-center justify-center text-lg hover:bg-purple-950/50 transition shrink-0">
+                            ▦
+                        </button>
+                        <button onclick="downloadSubVariant('game')" class="sub-dl-btn flex-1 h-12 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5">
+                            <span>⬇</span>
+                            <span>دانلود کانفیگ گیم</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- کارت ۲: مستقیم / تمام مسیر -->
+                <div class="cfg-neon-card-blue rounded-3xl p-4 space-y-3.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="space-y-2">
+                            <div id="svCard2Title" class="text-sm font-black text-white">مستقیم تمام مسیر</div>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span id="svStatusBadge2" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-400/40 text-emerald-300">● فعال</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/15 border border-blue-400/35 text-blue-200">WireGuard</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-blue-500/15 border border-blue-400/35 flex items-center justify-center text-xl text-blue-300 shrink-0">
+                            ⚡
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-blue-400/20 text-[11px] text-zinc-300">
+                        <span class="font-mono text-blue-200" dir="ltr" id="svDns2">1.1.1.1, 1.0.0.1</span>
+                        <span class="font-bold text-white" id="svTraffic2">📦 1 TB</span>
+                        <span class="font-bold text-purple-200" id="svDays2">⏳ 30 روز</span>
+                    </div>
+
+                    <div class="flex items-center gap-2.5">
+                        <button onclick="openSubQrModal('web')" title="نمایش QR Code" class="w-12 h-12 rounded-2xl bg-black/50 border border-blue-400/40 text-blue-200 flex items-center justify-center text-lg hover:bg-blue-950/50 transition shrink-0">
+                            ▦
+                        </button>
+                        <button onclick="downloadSubVariant('web')" class="sub-dl-btn flex-1 h-12 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5">
+                            <span>⬇</span>
+                            <span>دانلود کانفیگ</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- باکس لینک اشتراک پایین صفحه -->
+                <div class="pt-1 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-5 rounded-full bg-gradient-to-b from-blue-400 to-purple-400 inline-block"></span>
+                        <span class="text-sm font-black text-white">لینک اشتراک</span>
+                    </div>
+
+                    <div class="cfg-neon-card rounded-3xl p-3.5 space-y-2.5">
+                        <div class="text-[11px] text-purple-200 font-bold flex items-center gap-1.5">
+                            <span>🔗</span>
+                            <span>این لینک را در کلاینت خود وارد کنید</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="copyActiveSubLink()" class="px-4 h-10 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-black shrink-0 hover:opacity-95 transition">
+                                کپی
+                            </button>
+                            <input type="text" id="svCurrentSubLink" readonly dir="ltr" class="vexr-input flex-1 h-10 px-3 rounded-2xl text-[11px] font-mono text-zinc-200">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="subErrorBox" class="hidden relative text-center py-8">
+                <div class="text-red-400 font-bold text-sm mb-1.5">این لینک اشتراک غیرفعال یا نامعتبر است</div>
+                <p class="text-xs text-zinc-400">لطفاً برای دریافت لینک جدید با مدیر VEXR تماس بگیرید.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== نمای اصلی پنل مدیریت VEXR (ظرفیت 100 TB) ==================== -->
+    <div id="adminView" class="hidden max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+        <!-- سایدبار -->
+        <aside class="lg:col-span-2 vexr-panel rounded-3xl p-4 flex flex-col justify-between">
+            <div>
+                <div class="text-center pb-4 mb-4 border-b border-purple-900/30">
+                    <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-purple-600/30 mb-2">V</div>
+                    <div class="text-lg font-black text-white">VEXR</div>
+                    <div class="text-[11px] text-purple-300">پنل ۱۰۰ ترابایتی گیم</div>
+                </div>
+
+                <nav class="space-y-1.5 text-xs">
+                    <button id="nav-dashboard" onclick="switchPage('dashboard')" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-zinc-300 hover:bg-purple-950/40">
+                        <span>🏠</span><span>داشبورد</span>
+                    </button>
+                    <button id="nav-create" onclick="switchPage('create')" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl nav-active">
+                        <span>➕</span><span>ساخت کانفیگ</span>
+                    </button>
+                    <button id="nav-configs" onclick="switchPage('configs')" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-zinc-300 hover:bg-purple-950/40">
+                        <span>📋</span><span>کانفیگ‌ها</span>
+                    </button>
+                    <button id="nav-subs" onclick="switchPage('subs')" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-zinc-300 hover:bg-purple-950/40">
+                        <span>🔗</span><span>لینک ساب</span>
+                    </button>
+                    <button id="nav-settings" onclick="switchPage('settings')" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-zinc-300 hover:bg-purple-950/40">
+                        <span>⚙</span><span>تنظیمات پیشرفته</span>
+                    </button>
+                    <button onclick="lockPanel()" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-red-300 hover:bg-red-950/30 mt-2">
+                        <span>🔒</span><span>قفل پنل</span>
+                    </button>
+                </nav>
+            </div>
+
+            <div class="mt-6 p-3.5 rounded-2xl bg-purple-950/30 border border-purple-500/30 text-center">
+                <div class="text-xs font-bold text-purple-200">سقف پنل: 100 TB</div>
+                <div id="sidebarRemQuota" class="text-[11px] text-emerald-300 font-bold mt-0.5">باقی‌مانده: 100 TB</div>
+            </div>
+        </aside>
+
+        <!-- محتوای صفحات اختصاصی -->
+        <main class="lg:col-span-10 space-y-4">
+
+            <div class="vexr-panel rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center gap-1.5 text-emerald-400 font-bold"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>آنلاین هستید</span>
+                    <span id="liveClock" class="font-mono text-zinc-300">--:--:--</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-200 font-bold" id="topQuotaBadge">ظرفیت پنل: 0 / 100 TB</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-300 font-bold">👑 مدیریت ارشد</span>
+                    <span class="text-zinc-300 font-bold">VEXR_Admin</span>
+                </div>
+            </div>
+
+            <div class="vexr-panel rounded-3xl p-5 bg-gradient-to-l from-purple-950/60 via-indigo-950/50 to-blue-950/60 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h1 id="pageTitle" class="text-2xl sm:text-3xl font-black bg-gradient-to-l from-purple-300 via-fuchsia-300 to-blue-300 bg-clip-text text-transparent">ساخت کانفیگ گیم VEXR</h1>
+                    <p id="pageSubtitle" class="text-xs sm:text-sm text-zinc-300 mt-1">ظرفیت کل ۱۰۰ ترابایت • Endpoint: wg.parszone2.ir:35853 • MTU 1280</p>
+                </div>
+                <div class="text-xs bg-black/40 border border-purple-500/30 px-4 py-2.5 rounded-2xl">
+                    <div class="text-zinc-400">Endpoint سرور:</div>
+                    <div class="font-mono text-blue-300 font-bold mt-0.5" dir="ltr" id="endpointBadge">wg.parszone2.ir:35853</div>
+                </div>
+            </div>
+
+            <!-- نوار پیشرفت حجم کل ۱۰۰ ترابایتی پنل -->
+            <div class="vexr-panel rounded-2xl p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs mb-2">
+                    <span class="font-bold text-white">📦 تخصیص حجم کل پنل گیم (سقف ۱۰۰ ترابایت)</span>
+                    <span id="quotaBarText" class="font-bold text-purple-200">0 GB اختصاص‌یافته • 100 TB باقی‌مانده</span>
+                </div>
+                <div class="w-full h-2.5 rounded-full bg-zinc-900 overflow-hidden border border-purple-500/25">
+                    <div id="quotaProgressBar" class="h-full bg-gradient-to-l from-purple-500 via-indigo-500 to-blue-500 transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- صفحه ۱: داشبورد -->
+            <section id="page-dashboard" class="hidden space-y-4">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="vexr-panel rounded-2xl p-4">
+                        <div class="text-xs text-zinc-400 mb-1">کل کانفیگ‌ها</div>
+                        <div class="text-2xl font-black text-white" id="dashTotal">0</div>
+                    </div>
+                    <div class="vexr-panel rounded-2xl p-4">
+                        <div class="text-xs text-zinc-400 mb-1">کانفیگ‌های فعال</div>
+                        <div class="text-2xl font-black text-emerald-400" id="dashActive">0</div>
+                    </div>
+                    <div class="vexr-panel rounded-2xl p-4">
+                        <div class="text-xs text-zinc-400 mb-1">حجم تخصیص‌یافته</div>
+                        <div class="text-2xl font-black text-purple-400" id="dashTraffic">0 GB / 100 TB</div>
+                    </div>
+                    <div class="vexr-panel rounded-2xl p-4">
+                        <div class="text-xs text-zinc-400 mb-1">حجم باقی‌مانده پنل</div>
+                        <div class="text-2xl font-black text-blue-400" id="dashRemaining">100 TB</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button onclick="switchPage('create')" class="vexr-btn-grad p-4 rounded-2xl text-white font-black text-xs">+ ساخت کانفیگ گیم جدید</button>
+                    <button onclick="switchPage('configs')" class="vexr-panel p-4 rounded-2xl text-purple-200 font-black text-xs hover:border-purple-400">📋 ورود به صفحه کانفیگ‌ها</button>
+                    <button onclick="switchPage('subs')" class="vexr-panel p-4 rounded-2xl text-blue-200 font-black text-xs hover:border-blue-400">🔗 مدیریت لینک‌های ساب</button>
+                </div>
+            </section>
+
+            <!-- صفحه ۲: ساخت کانفیگ -->
+            <section id="page-create" class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+                <div class="xl:col-span-7 vexr-panel rounded-3xl p-5 space-y-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <h2 class="text-base font-black text-white flex items-center gap-2">
+                            <span>🎮</span><span>ساخت کانفیگ وایرگارد گیم</span>
+                        </h2>
+                        <span class="px-3 py-1 rounded-xl bg-purple-500/15 border border-purple-400/30 text-purple-200 text-xs font-bold">پروفایل گیمینگ</span>
+                    </div>
+
+                    <!-- روز اعتبار -->
+                    <div>
+                        <label class="block text-sm font-bold text-zinc-100 mb-2">روز اعتبار</label>
+                        <div class="ref-field-box px-4 py-3 flex items-center justify-between">
+                            <button type="button" onclick="stepVal('cfgDays', -1, 1)" class="w-8 h-8 rounded-xl bg-purple-950/70 border border-purple-500/40 text-purple-200 font-bold">-</button>
+                            <input type="number" id="cfgDays" value="30" min="1" class="w-24 bg-transparent text-center font-black text-base text-white focus:outline-none">
+                            <button type="button" onclick="stepVal('cfgDays', 1, 1)" class="w-8 h-8 rounded-xl bg-purple-950/70 border border-purple-500/40 text-purple-200 font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- کاربر -->
+                    <div>
+                        <label class="block text-sm font-bold text-zinc-100 mb-2">کاربر</label>
+                        <div class="ref-field-box px-4 py-3 flex items-center justify-between">
+                            <button type="button" onclick="stepVal('cfgUsers', -1, 1)" class="w-8 h-8 rounded-xl bg-purple-950/70 border border-purple-500/40 text-purple-200 font-bold">-</button>
+                            <input type="number" id="cfgUsers" value="1" min="1" class="w-24 bg-transparent text-center font-black text-base text-white focus:outline-none">
+                            <button type="button" onclick="stepVal('cfgUsers', 1, 1)" class="w-8 h-8 rounded-xl bg-purple-950/70 border border-purple-500/40 text-purple-200 font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- حجم (گیگ) -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-bold text-zinc-100">حجم (گیگ)</label>
+                            <span id="createRemHint" class="text-xs font-bold text-emerald-300">حداکثر مجاز: 100 TB</span>
+                        </div>
+                        <div class="ref-field-box px-4 py-3 flex items-center justify-between">
+                            <button type="button" onclick="stepVal('cfgTraffic', -50, 1)" class="w-8 h-8 rounded-xl bg-purple-950/70 border border-purple-500/40 text-purple-200 font-bold">-</button>
+                            <input type="number" id="cfgTraffic" value="1024" min="1" class="w-28 bg-transparent text-center font-black text-base text-white focus:outline-none">
+                            <button type="button" onclick="stepVal('cfgTraffic', 50, 1)" class="w-8 h-8 rounded-xl bg-purple-950/70 border border-purple-500/40 text-purple-200 font-bold">+</button>
+                        </div>
+                    </div>
+
+                    <!-- نام (اختیاری) -->
+                    <div>
+                        <label class="block text-sm font-bold text-zinc-100 mb-2">نام (اختیاری)</label>
+                        <div class="ref-field-box px-4 py-2.5">
+                            <input type="text" id="cfgName" placeholder="نام کانفیگ را وارد کنید..." class="w-full bg-transparent text-right text-xs font-bold text-white focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- تنظیمات پیشرفته -->
+                    <div>
+                        <button type="button" onclick="toggleAdvanced()" class="w-full py-2.5 px-4 rounded-xl bg-black/40 border border-purple-500/30 text-xs text-zinc-200 flex items-center justify-between">
+                            <span>⚙ تنظیمات پیشرفته کانفیگ گیم (AllowedIPs، DNS، MTU، Keepalive)</span>
+                            <span id="advArrow">▾</span>
+                        </button>
+                        <div id="advancedBox" class="hidden mt-2.5 p-3.5 rounded-2xl bg-black/50 border border-purple-900/40 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block text-zinc-400 mb-1">رمز عبور لینک ساب</label>
+                                <input type="text" id="cfgSubPass" placeholder="بدون رمز" class="vexr-input w-full px-3 py-2 rounded-xl">
+                            </div>
+                            <div>
+                                <label class="block text-zinc-400 mb-1">DNS</label>
+                                <input type="text" id="cfgDns" value="1.1.1.1, 1.0.0.1" dir="ltr" class="vexr-input w-full px-3 py-2 rounded-xl font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-zinc-400 mb-1">MTU</label>
+                                <input type="number" id="cfgMtu" value="1280" dir="ltr" class="vexr-input w-full px-3 py-2 rounded-xl font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-zinc-400 mb-1">PersistentKeepalive</label>
+                                <input type="number" id="cfgKeepalive" value="11" dir="ltr" class="vexr-input w-full px-3 py-2 rounded-xl font-mono">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-zinc-400 mb-1">AllowedIPs گیم</label>
+                                <textarea id="cfgAllowedIps" rows="3" dir="ltr" class="vexr-input w-full px-3 py-2 rounded-xl font-mono text-[11px]"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="createAndDownloadConfig()" class="vexr-btn-grad w-full py-3.5 rounded-2xl text-sm font-black text-white">
+                        🚀 ساخت و دانلود کانفیگ گیم 🚀
+                    </button>
+                </div>
+
+                <div class="xl:col-span-5 vexr-success-panel rounded-3xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="text-center mb-3">
+                            <div class="w-10 h-10 mx-auto rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-300 flex items-center justify-center text-lg font-black mb-1.5">✓</div>
+                            <h3 class="text-base font-black text-emerald-300">کانفیگ گیم با موفقیت ساخته شد!</h3>
+                            <p class="text-[11px] text-zinc-300">هم‌اکنون می‌توانید از لینک ساب یا فایل کانفیگ استفاده کنید.</p>
+                        </div>
+
+                        <div class="grid grid-cols-12 gap-3 items-center bg-black/35 border border-emerald-500/25 rounded-2xl p-3 mb-3">
+                            <div class="col-span-7 text-xs space-y-1.5">
+                                <div class="font-bold text-emerald-300 border-b border-emerald-500/20 pb-1">مشخصات کانفیگ:</div>
+                                <div class="flex justify-between"><span class="text-zinc-400">نام:</span><b id="resName">-</b></div>
+                                <div class="flex justify-between"><span class="text-zinc-400">حجم:</span><b id="resTraffic">1 TB</b></div>
+                                <div class="flex justify-between"><span class="text-zinc-400">زمان:</span><b id="resDays">30 روز</b></div>
+                                <div class="flex justify-between"><span class="text-zinc-400">کاربران:</span><b id="resUsers">1</b></div>
+                                <div class="flex justify-between"><span class="text-zinc-400">سرور:</span><b class="font-mono text-[11px]" dir="ltr">wg.parszone2.ir:35853</b></div>
+                            </div>
+                            <div class="col-span-5 flex flex-col items-center">
+                                <div id="resultQrBox" class="bg-white p-1.5 rounded-xl"></div>
+                                <span class="text-[10px] text-zinc-300 mt-1">اسکن QR Code</span>
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-zinc-300 mb-1">🔗 لینک ساب (اشتراک)</div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="resSubLink" readonly dir="ltr" class="vexr-input flex-1 px-3 py-2 rounded-xl text-[11px] font-mono text-purple-200">
+                            <button type="button" onclick="copyResultSub()" class="px-3.5 py-2 rounded-xl bg-purple-600/35 border border-purple-400/50 text-white text-xs font-bold">کپی</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mt-3">
+                        <button type="button" onclick="openResultSubInTab()" class="py-2 rounded-xl bg-blue-600/25 border border-blue-400/40 text-blue-200 text-xs font-bold">↗ باز کردن لینک ساب</button>
+                        <button type="button" onclick="downloadLatestConfig()" class="py-2 rounded-xl bg-emerald-600/25 border border-emerald-400/40 text-emerald-200 text-xs font-bold">⬇ دانلود مجدد .conf</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- صفحه ۳: صفحه اختصاصی کانفیگ‌ها -->
+            <section id="page-configs" class="hidden vexr-panel rounded-3xl p-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-purple-900/30">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-sm font-black text-white">📋 لیست و مدیریت کانفیگ‌ها</span>
+                        <input type="text" id="searchBox" oninput="renderList()" placeholder="جست‌وجوی نام کانفیگ..." class="vexr-input px-3 py-1.5 rounded-xl text-xs w-44 sm:w-60">
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                        <button type="button" onclick="switchPage('create')" class="vexr-btn-grad px-3.5 py-1.5 rounded-xl text-white font-bold">+ ساخت کانفیگ</button>
+                        <button type="button" onclick="toggleSelectedStatus()" class="px-3 py-1.5 rounded-xl bg-purple-950/70 border border-purple-500/40 text-purple-200 font-bold">↻ تغییر وضعیت</button>
+                        <button type="button" onclick="deleteSelectedConfigs()" class="px-3 py-1.5 rounded-xl bg-red-950/70 border border-red-500/40 text-red-300 font-bold">🗑 حذف انتخاب شده</button>
+                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-black/40 border border-zinc-700 cursor-pointer">
+                            <input type="checkbox" id="selectAllChk" onchange="toggleSelectAll(this.checked)">
+                            <span>انتخاب همه</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse text-xs">
+                        <thead>
+                            <tr class="text-zinc-400 border-b border-purple-900/30">
+                                <th class="py-2.5 px-2">وضعیت</th>
+                                <th class="py-2.5 px-2">نام کانفیگ</th>
+                                <th class="py-2.5 px-2">حجم</th>
+                                <th class="py-2.5 px-2">مدت باقی‌مانده</th>
+                                <th class="py-2.5 px-2">کاربران</th>
+                                <th class="py-2.5 px-2">لینک ساب</th>
+                                <th class="py-2.5 px-2 text-center">تنظیمات</th>
+                                <th class="py-2.5 px-2 text-center">انتخاب</th>
+                            </tr>
+                        </thead>
+                        <tbody id="configsTbody" class="divide-y divide-zinc-800/70"></tbody>
+                    </table>
+                </div>
+                <div id="emptyConfigsBox" class="hidden text-center py-10 text-zinc-400 text-xs">هیچ کانفیگی ثبت نشده است.</div>
+            </section>
+
+            <!-- صفحه ۴: صفحه اختصاصی لینک ساب -->
+            <section id="page-subs" class="hidden vexr-panel rounded-3xl p-5">
+                <h2 class="text-sm font-black text-white mb-4">🔗 لینک‌های ساب اختصاصی کانفیگ‌ها</h2>
+                <div id="subsPageList" class="space-y-2.5 text-xs"></div>
+            </section>
+
+            <!-- صفحه ۵: صفحه اختصاصی تنظیمات پیشرفته -->
+            <section id="page-settings" class="hidden vexr-panel rounded-3xl p-5 max-w-xl">
+                <h2 class="text-sm font-black text-white mb-4">⚙ تنظیمات پیشرفته سرور و ظرفیت پنل</h2>
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block text-zinc-400 mb-1">سقف کل حجم پنل (ترابایت)</label>
+                        <input type="number" id="srvMaxQuotaTB" min="1" dir="ltr" class="vexr-input w-full px-3.5 py-2.5 rounded-xl font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-zinc-400 mb-1">آی‌پی یا دامنه سرور (Endpoint)</label>
+                        <input type="text" id="srvIp" dir="ltr" class="vexr-input w-full px-3.5 py-2.5 rounded-xl font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-zinc-400 mb-1">پورت WireGuard</label>
+                        <input type="number" id="srvPort" dir="ltr" class="vexr-input w-full px-3.5 py-2.5 rounded-xl font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-zinc-400 mb-1">کلید عمومی سرور (Server Public Key)</label>
+                        <input type="text" id="srvKey" dir="ltr" class="vexr-input w-full px-3.5 py-2.5 rounded-xl font-mono">
+                    </div>
+                    <div class="pt-2 flex gap-2">
+                        <button onclick="saveServerCfg()" class="vexr-btn-grad px-6 py-2.5 rounded-xl font-bold text-white">ذخیره تنظیمات</button>
+                        <button onclick="renewAllConfigs()" class="px-4 py-2.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-bold">تمدید ۳۰ روزه همه کانفیگ‌ها</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- مودال QR و متن کانفیگ -->
+    <div id="qrModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4">
+        <div class="vexr-panel rounded-3xl p-5 w-full max-w-sm text-center">
+            <h4 class="text-sm font-black text-white mb-1" id="modalQrTitle">QR Code کانفیگ</h4>
+            <p class="text-[11px] text-zinc-400 mb-3">اسکن در اپلیکیشن WireGuard</p>
+            <div id="modalQrBox" class="bg-white p-2.5 rounded-2xl inline-block mb-3"></div>
+            <textarea id="modalConfText" readonly rows="8" dir="ltr" class="vexr-input w-full p-2.5 rounded-xl text-[11px] font-mono mb-3"></textarea>
+            <button onclick="closeModal('qrModal')" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs">بستن</button>
+        </div>
+    </div>
+
+    <!-- پیام toast -->
+    <div id="toast" class="fixed bottom-4 left-4 z-50 hidden px-4 py-2.5 rounded-xl bg-purple-950 border border-purple-400 text-white text-xs font-bold shadow-lg"></div>
+
+    <script>
+        const PANEL_PASSWORD = 'VEXR';
+        const AUTH_SESSION_KEY = 'vexr_panel_unlocked_100tb_v1';
+        const DB_KEY = 'vexr_wg_data_100tb_v1';
+        const SRV_KEY = 'vexr_wg_srv_100tb_v1';
+
+        const DEFAULT_GAME_ALLOWED_IPS = "1.0.0.0/8, 2.0.0.0/7, 4.0.0.0/8, 5.0.0.0/9, 5.128.0.0/11, 5.160.0.0/12, 5.176.0.0/13, 5.184.0.0/14, 5.188.0.0/19, 5.188.40.0/21, 5.188.48.0/20, 5.188.64.0/18, 5.188.128.0/19, 5.188.160.0/21, 5.188.172.0/22, 5.188.176.0/21, 5.188.184.0/22, 5.188.188.0/24, 5.188.192.0/18, 5.189.0.0/16, 5.190.0.0/15, 5.192.0.0/10, 6.0.0.0/7, 8.0.0.0/7, 11.0.0.0/8, 12.0.0.0/6, 16.0.0.0/6, 20.0.0.0/7, 22.0.0.0/8, 23.0.0.0/10, 23.64.0.0/12, 23.80.0.0/13, 23.88.0.0/15, 23.90.0.0/17, 23.90.192.0/18, 23.91.0.0/16, 23.92.0.0/14, 23.96.0.0/11, 23.128.0.0/9, 24.0.0.0/5, 32.0.0.0/3, 64.0.0.0/7, 66.0.0.0/9, 66.128.0.0/12, 66.144.0.0/14, 66.148.0.0/15, 66.150.0.0/16, 66.151.0.0/19, 66.151.32.0/24, 66.151.34.0/23, 66.151.36.0/22, 66.151.40.0/21, 66.151.48.0/20, 66.151.64.0/18, 66.151.128.0/17, 66.152.0.0/13, 66.160.0.0/11, 66.192.0.0/10, 67.0.0.0/8, 68.0.0.0/6, 72.0.0.0/5, 80.0.0.0/5, 88.0.0.0/6, 92.0.0.0/11, 92.32.0.0/14, 92.36.0.0/15, 92.38.0.0/17, 92.38.128.0/21, 92.38.136.0/22, 92.38.144.0/20, 92.38.160.0/20, 92.38.176.0/23, 92.38.178.0/24, 92.38.184.0/21, 92.38.192.0/18, 92.39.0.0/16, 92.40.0.0/13, 92.48.0.0/12, 92.64.0.0/10, 92.128.0.0/9, 93.0.0.0/8, 94.0.0.0/8, 95.0.0.0/10, 95.64.0.0/12, 95.80.0.0/14, 95.84.0.0/16, 95.85.0.0/18, 95.85.64.0/21, 95.85.72.0/23, 95.85.74.0/24, 95.85.80.0/20, 95.85.96.0/19, 95.85.128.0/17, 95.86.0.0/15, 95.88.0.0/13, 95.96.0.0/11, 95.128.0.0/9, 96.0.0.0/6, 100.0.0.0/7, 102.0.0.0/8, 103.0.0.0/9, 103.128.0.0/10, 103.192.0.0/12, 103.208.0.0/14, 103.212.0.0/15, 103.214.0.0/16, 103.215.0.0/17, 103.215.128.0/18, 103.215.192.0/20, 103.215.208.0/21, 103.215.216.0/24, 103.215.220.0/22, 103.215.224.0/19, 103.216.0.0/13, 103.224.0.0/11, 104.0.0.0/9, 104.128.0.0/11, 104.160.0.0/17, 104.160.160.0/19, 104.160.192.0/18, 104.161.0.0/16, 104.162.0.0/15, 104.164.0.0/15, 104.167.0.0/16, 104.168.0.0/13, 104.176.0.0/12, 104.192.0.0/10, 105.0.0.0/8, 106.0.0.0/7, 108.0.0.0/6, 112.0.0.0/4, 128.0.0.0/4, 144.0.0.0/6, 148.0.0.0/7, 150.0.0.0/8, 151.0.0.0/10, 151.64.0.0/11, 151.96.0.0/13, 151.104.0.0/15, 151.106.0.0/17, 151.106.128.0/18, 151.106.192.0/19, 151.106.224.0/20, 151.106.240.0/21, 151.106.253.0/24, 151.106.255.0/24, 151.107.0.0/16, 151.108.0.0/14, 151.112.0.0/12, 151.128.0.0/9, 152.0.0.0/5, 160.0.0.0/7, 162.0.0.0/9, 162.128.0.0/10, 162.192.0.0/11, 162.224.0.0/12, 162.240.0.0/13, 162.248.0.0/16, 162.249.0.0/18, 162.249.64.0/21, 162.249.80.0/20, 162.249.96.0/19, 162.249.128.0/17, 162.250.0.0/15, 162.252.0.0/14, 163.0.0.0/8, 164.0.0.0/6, 168.0.0.0/6, 172.0.0.0/12, 172.32.0.0/11, 172.64.0.0/10, 172.128.0.0/9, 173.0.0.0/8, 174.0.0.0/7, 176.0.0.0/5, 184.0.0.0/8, 185.0.0.0/12, 185.16.0.0/14, 185.20.0.0/15, 185.22.0.0/16, 185.23.0.0/17, 185.23.128.0/19, 185.23.160.0/20, 185.23.176.0/22, 185.23.184.0/21, 185.23.192.0/18, 185.24.0.0/13, 185.32.0.0/11, 185.64.0.0/10, 185.128.0.0/9, 186.0.0.0/7, 188.0.0.0/6, 192.0.0.0/10, 192.64.0.0/17, 192.64.128.0/19, 192.64.160.0/21, 192.64.176.0/20, 192.64.192.0/18, 192.65.0.0/16, 192.66.0.0/15, 192.68.0.0/14, 192.72.0.0/13, 192.80.0.0/12, 192.96.0.0/11, 192.128.0.0/11, 192.160.0.0/13, 192.169.0.0/16, 192.170.0.0/15, 192.172.0.0/14, 192.176.0.0/12, 192.192.0.0/13, 192.200.0.0/14, 192.204.0.0/15, 192.206.0.0/16, 192.207.1.0/24, 192.207.2.0/23, 192.207.4.0/22, 192.207.8.0/21, 192.207.16.0/20, 192.207.32.0/19, 192.207.64.0/18, 192.207.128.0/17, 192.208.0.0/12, 192.224.0.0/11, 193.0.0.0/8, 194.0.0.0/7, 196.0.0.0/6, 200.0.0.0/7, 202.0.0.0/10, 202.64.0.0/13, 202.72.0.0/14, 202.76.0.0/15, 202.78.0.0/17, 202.78.128.0/19, 202.78.160.0/21, 202.78.168.0/22, 202.78.176.0/20, 202.78.192.0/18, 202.79.0.0/16, 202.80.0.0/12, 202.96.0.0/11, 202.128.0.0/9, 203.0.0.0/8, 204.0.0.0/6, 208.0.0.0/6, 212.0.0.0/8, 213.0.0.0/9, 213.128.0.0/12, 213.144.0.0/13, 213.152.0.0/14, 213.156.0.0/17, 213.156.128.0/20, 213.156.144.0/22, 213.156.148.0/23, 213.156.150.0/24, 213.156.154.0/23, 213.156.156.0/22, 213.156.160.0/19, 213.156.192.0/18, 213.157.0.0/16, 213.158.0.0/15, 213.160.0.0/11, 213.192.0.0/10, 214.0.0.0/7, 216.0.0.0/5, ::/0";
+
+        const pageMeta = {
+            dashboard: { title: 'داشبورد VEXR (100 TB)', sub: 'مدیریت ظرفیت کل ۱۰۰ ترابایتی، کانفیگ‌های گیم و لینک‌های ساب' },
+            create: { title: 'ساخت کانفیگ گیم VEXR', sub: 'ظرفیت کل ۱۰۰ ترابایت • Endpoint: wg.parszone2.ir:35853 • MTU 1280' },
+            configs: { title: 'مدیریت کانفیگ‌ها', sub: 'مشاهده، ویرایش وضعیت، تمدید، حذف، دانلود و QR Code کانفیگ‌ها' },
+            subs: { title: 'لینک‌های ساب اختصاصی', sub: 'مدیریت و کپی لینک اشتراک کاربران' },
+            settings: { title: 'تنظیمات پیشرفته', sub: 'تنظیمات سقف ترابایتی پنل، Endpoint، پورت و کلید عمومی سرور' }
+        };
+
+        function b64(arr) {
+            let s = '';
+            for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
+            return btoa(s);
+        }
+
+        function genKeys() {
+            const kp = nacl.box.keyPair();
+            const psk = nacl.randomBytes(32);
+            return {
+                privateKey: b64(kp.secretKey),
+                publicKey: b64(kp.publicKey),
+                presharedKey: b64(psk)
+            };
+        }
+
+        function formatTrafficFromGB(gb) {
+            const val = Number(gb) || 0;
+            if (val >= 1024) {
+                const tb = val / 1024;
+                return `${Number.isInteger(tb) ? tb : tb.toFixed(2)} TB`;
+            }
+            return `${val} GB`;
+        }
+
+        let srvCfg = JSON.parse(localStorage.getItem(SRV_KEY)) || {
+            maxQuotaTB: 100,
+            endpoint: 'wg.parszone2.ir',
+            port: 35853,
+            publicKey: '30ORXJ0hLB01l7ERdCGW5O88EibHUvveeydipdGblyo=',
+            defaultDns: '1.1.1.1, 1.0.0.1',
+            defaultMtu: 1280,
+            defaultKeepalive: 11,
+            defaultAllowedIps: DEFAULT_GAME_ALLOWED_IPS
+        };
+        localStorage.setItem(SRV_KEY, JSON.stringify(srvCfg));
+
+        let items = JSON.parse(localStorage.getItem(DB_KEY)) || [];
+        let selectedIds = new Set();
+        let latestCreated = null;
+        let activeSubData = null;
+
+        function getMaxQuotaGB() {
+            return (parseInt(srvCfg.maxQuotaTB, 10) || 100) * 1024;
+        }
+
+        function getUsedQuotaGB() {
+            return items.reduce((sum, item) => sum + (parseInt(item.trafficGB, 10) || 0), 0);
+        }
+
+        function getRemainingQuotaGB() {
+            return Math.max(0, getMaxQuotaGB() - getUsedQuotaGB());
+        }
+
+        function updateQuotaUI() {
+            const maxTB = parseInt(srvCfg.maxQuotaTB, 10) || 100;
+            const maxGB = getMaxQuotaGB();
+            const usedGB = getUsedQuotaGB();
+            const remGB = Math.max(0, maxGB - usedGB);
+            const pct = Math.min(100, Math.round((usedGB / maxGB) * 100));
+
+            const topBadge = document.getElementById('topQuotaBadge');
+            const sideRem = document.getElementById('sidebarRemQuota');
+            const barText = document.getElementById('quotaBarText');
+            const barEl = document.getElementById('quotaProgressBar');
+            const hintEl = document.getElementById('createRemHint');
+
+            if (topBadge) topBadge.innerText = `ظرفیت پنل: ${formatTrafficFromGB(usedGB)} / ${maxTB} TB`;
+            if (sideRem) sideRem.innerText = `باقی‌مانده: ${formatTrafficFromGB(remGB)}`;
+            if (barText) barText.innerText = `${formatTrafficFromGB(usedGB)} اختصاص‌یافته • ${formatTrafficFromGB(remGB)} باقی‌مانده از ${maxTB} TB`;
+            if (barEl) barEl.style.width = `${pct}%`;
+            if (hintEl) hintEl.innerText = `حداکثر مجاز: ${formatTrafficFromGB(remGB)} (${remGB} GB)`;
+        }
+
+        function unlockPanel() {
+            const val = (document.getElementById('panelPassInput').value || '').trim();
+            if (val === PANEL_PASSWORD) {
+                sessionStorage.setItem(AUTH_SESSION_KEY, '1');
+                document.getElementById('panelPassError').classList.add('hidden');
+                document.getElementById('lockScreen').classList.add('hidden');
+                document.getElementById('adminView').classList.remove('hidden');
+                initAdminPanel();
+            } else {
+                document.getElementById('panelPassError').classList.remove('hidden');
+            }
+        }
+
+        function lockPanel() {
+            sessionStorage.removeItem(AUTH_SESSION_KEY);
+            document.getElementById('panelPassInput').value = '';
+            document.getElementById('adminView').classList.add('hidden');
+            document.getElementById('lockScreen').classList.remove('hidden');
+        }
+
+        function switchPage(pageKey) {
+            ['dashboard', 'create', 'configs', 'subs', 'settings'].forEach(k => {
+                document.getElementById(`page-${k}`).classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${k}`);
+                navBtn.className = 'w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-zinc-300 hover:bg-purple-950/40';
+            });
+
+            document.getElementById(`page-${pageKey}`).classList.remove('hidden');
+            document.getElementById(`nav-${pageKey}`).className = 'w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl nav-active';
+            document.getElementById('pageTitle').innerText = pageMeta[pageKey].title;
+            document.getElementById('pageSubtitle').innerText = pageMeta[pageKey].sub;
+
+            updateQuotaUI();
+            if (pageKey === 'dashboard') updateDashboardStats();
+            if (pageKey === 'configs') renderList();
+            if (pageKey === 'subs') renderSubsPage();
+            if (pageKey === 'settings') fillSettingsInputs();
+        }
+
+        function saveDb() {
+            localStorage.setItem(DB_KEY, JSON.stringify(items));
+            updateQuotaUI();
+            updateDashboardStats();
+            renderList();
+            renderSubsPage();
+        }
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.innerText = msg;
+            el.classList.remove('hidden');
+            clearTimeout(window._t);
+            window._t = setTimeout(() => el.classList.add('hidden'), 2600);
+        }
+
+        function stepVal(id, delta, minVal) {
+            const inp = document.getElementById(id);
+            let next = Math.max(minVal, (parseInt(inp.value, 10) || minVal) + delta);
+            if (id === 'cfgTraffic') {
+                const rem = Math.max(1, getRemainingQuotaGB());
+                next = Math.min(rem, next);
+            }
+            inp.value = next;
+        }
+
+        function toggleAdvanced() {
+            const box = document.getElementById('advancedBox');
+            const arr = document.getElementById('advArrow');
+            box.classList.toggle('hidden');
+            arr.innerText = box.classList.contains('hidden') ? '▾' : '▴';
+        }
+
+        function buildConfForVariant(item, variant) {
+            const isGame = variant !== 'web';
+            const mtu = isGame ? (item.mtu || 1280) : 1420;
+            const keepalive = isGame ? (item.keepalive ?? 11) : 25;
+            const allowedIps = isGame
+                ? (item.allowedIps || srvCfg.defaultAllowedIps || DEFAULT_GAME_ALLOWED_IPS)
+                : '0.0.0.0/0, ::/0';
+
+            return `[Interface]
+PrivateKey = ${item.privateKey}
+Address = ${item.ip}/32
+DNS = ${item.dns || srvCfg.defaultDns}
+MTU = ${mtu}
+
+[Peer]
+PublicKey = ${srvCfg.publicKey}
+Endpoint = ${srvCfg.endpoint}:${srvCfg.port}
+AllowedIPs = ${allowedIps}
+PersistentKeepalive = ${keepalive}`;
+        }
+
+        function buildConf(item) {
+            return buildConfForVariant(item, 'game');
+        }
+
+        function buildSubUrl(item) {
+            const base = window.location.href.split('#')[0].split('?')[0];
+            const payload = {
+                id: item.id,
+                name: item.name,
+                traffic: item.trafficGB,
+                days: Math.max(0, Math.ceil((item.expireAt - Date.now()) / 86400000)),
+                users: item.users,
+                active: item.active ? 1 : 0,
+                pass: item.subPass || '',
+                ip: item.ip,
+                privateKey: item.privateKey,
+                dns: item.dns || srvCfg.defaultDns,
+                mtu: item.mtu || 1280,
+                keepalive: item.keepalive ?? 11,
+                allowedIps: item.allowedIps || srvCfg.defaultAllowedIps,
+                endpoint: `${srvCfg.endpoint}:${srvCfg.port}`,
+                publicKey: srvCfg.publicKey
+            };
+            const enc = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+            return `${base}#sub=${enc}`;
+        }
+
+        function downloadConfFile(name, text) {
+            const clean = (name || 'VEXR-Game').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const blob = new Blob([text], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${clean}.conf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function createAndDownloadConfig() {
+            const maxTB = parseInt(srvCfg.maxQuotaTB, 10) || 100;
+            const remGB = getRemainingQuotaGB();
+            const requestedGB = parseInt(document.getElementById('cfgTraffic').value, 10) || 1;
+
+            if (remGB <= 0) {
+                showToast(`ظرفیت کل ${maxTB} ترابایت پنل پر شده است! کانفیگی حذف کنید.`);
+                return;
+            }
+            if (requestedGB > remGB) {
+                showToast(`حجم درخواستی (${requestedGB} GB) بیشتر از حجم باقی‌مانده پنل (${formatTrafficFromGB(remGB)}) است!`);
+                return;
+            }
+
+            const days = parseInt(document.getElementById('cfgDays').value, 10) || 30;
+            const users = parseInt(document.getElementById('cfgUsers').value, 10) || 1;
+            const name = document.getElementById('cfgName').value.trim() || `VEXR-Game-${items.length + 1}`;
+            const subPass = document.getElementById('cfgSubPass').value.trim();
+            const dns = document.getElementById('cfgDns').value.trim() || srvCfg.defaultDns;
+            const mtu = parseInt(document.getElementById('cfgMtu').value, 10) || 1280;
+            const keepalive = parseInt(document.getElementById('cfgKeepalive').value, 10);
+            const safeKeepalive = Number.isNaN(keepalive) ? 11 : keepalive;
+            const allowedIps = document.getElementById('cfgAllowedIps').value.trim() || DEFAULT_GAME_ALLOWED_IPS;
+
+            const keys = genKeys();
+            const octet4 = ((items.length + 4) % 240) + 2;
+            const newItem = {
+                id: Date.now(),
+                name,
+                trafficGB: requestedGB,
+                users,
+                expireAt: Date.now() + days * 86400000,
+                active: true,
+                subPass,
+                dns,
+                mtu,
+                keepalive: safeKeepalive,
+                allowedIps,
+                ip: `10.132.150.${octet4}`,
+                privateKey: keys.privateKey,
+                publicKey: keys.publicKey,
+                presharedKey: keys.presharedKey
+            };
+
+            items.unshift(newItem);
+            latestCreated = newItem;
+            saveDb();
+            updateResultCard(newItem);
+            downloadConfFile(newItem.name, buildConf(newItem));
+            showToast(`کانفیگ گیم ${newItem.name} (${formatTrafficFromGB(requestedGB)}) ساخته و دانلود شد`);
+        }
+
+        function updateResultCard(item) {
+            const daysLeft = Math.max(0, Math.ceil((item.expireAt - Date.now()) / 86400000));
+            document.getElementById('resName').innerText = item.name;
+            document.getElementById('resTraffic').innerText = formatTrafficFromGB(item.trafficGB);
+            document.getElementById('resDays').innerText = `${daysLeft} روز`;
+            document.getElementById('resUsers').innerText = item.users;
+            document.getElementById('resSubLink').value = buildSubUrl(item);
+
+            const qrBox = document.getElementById('resultQrBox');
+            qrBox.innerHTML = '';
+            new QRCode(qrBox, { text: buildConf(item), width: 105, height: 105 });
+        }
+
+        function copyResultSub() {
+            const val = document.getElementById('resSubLink').value;
+            if (!val) return;
+            navigator.clipboard.writeText(val);
+            showToast('لینک ساب کپی شد');
+        }
+
+        function openResultSubInTab() {
+            const val = document.getElementById('resSubLink').value;
+            if (val) window.open(val, '_blank');
+        }
+
+        function downloadLatestConfig() {
+            if (!latestCreated) return;
+            downloadConfFile(latestCreated.name, buildConf(latestCreated));
+        }
+
+        function updateDashboardStats() {
+            const maxTB = parseInt(srvCfg.maxQuotaTB, 10) || 100;
+            const usedGB = getUsedQuotaGB();
+            const remGB = Math.max(0, getMaxQuotaGB() - usedGB);
+
+            document.getElementById('dashTotal').innerText = items.length;
+            document.getElementById('dashActive').innerText = items.filter(x => x.active).length;
+            document.getElementById('dashTraffic').innerText = `${formatTrafficFromGB(usedGB)} / ${maxTB} TB`;
+            document.getElementById('dashRemaining').innerText = formatTrafficFromGB(remGB);
+        }
+
+        function renderList() {
+            const q = document.getElementById('searchBox').value.trim().toLowerCase();
+            const tbody = document.getElementById('configsTbody');
+            const emptyBox = document.getElementById('emptyConfigsBox');
+            tbody.innerHTML = '';
+
+            const filtered = items.filter(it => it.name.toLowerCase().includes(q));
+            emptyBox.classList.toggle('hidden', filtered.length > 0);
+
+            for (const it of filtered) {
+                const daysLeft = Math.max(0, Math.ceil((it.expireAt - Date.now()) / 86400000));
+                const checkedAttr = selectedIds.has(it.id) ? 'checked' : '';
+                const subUrl = buildSubUrl(it);
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-purple-950/15';
+                tr.innerHTML = `
+                    <td class="py-3 px-2 whitespace-nowrap">
+                        <button onclick="toggleOne(${it.id})" class="inline-flex items-center gap-1.5 font-bold ${it.active ? 'text-emerald-400' : 'text-red-400'}">
+                            <span>${it.active ? '● فعال' : '● غیرفعال'}</span>
+                            <span class="w-8 h-4 rounded-full p-0.5 inline-flex items-center ${it.active ? 'bg-emerald-500 justify-end' : 'bg-red-600 justify-start'}">
+                                <span class="w-3 h-3 rounded-full bg-white"></span>
+                            </span>
+                        </button>
+                    </td>
+                    <td class="py-3 px-2 font-bold text-white">${it.name} <span class="text-[10px] text-purple-300">(گیم)</span></td>
+                    <td class="py-3 px-2 text-zinc-200">${formatTrafficFromGB(it.trafficGB)}</td>
+                    <td class="py-3 px-2 text-zinc-300">${daysLeft} روز</td>
+                    <td class="py-3 px-2 text-zinc-300">${it.users}</td>
+                    <td class="py-3 px-2">
+                        <a href="${subUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-600/35 border border-purple-400/40 text-purple-200 font-bold">
+                            <span>🔗 مشاهده لینک</span>
+                        </a>
+                    </td>
+                    <td class="py-3 px-2">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="openQr(${it.id})" title="QR Code" class="p-1.5 rounded-lg bg-indigo-950/80 border border-indigo-500/30">▦</button>
+                            <button onclick="copyOne(${it.id})" title="کپی" class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700">📋</button>
+                            <button onclick="downloadOne(${it.id})" title="دانلود" class="p-1.5 rounded-lg bg-blue-950/80 border border-blue-500/30">⬇</button>
+                            <button onclick="deleteOne(${it.id})" title="حذف" class="p-1.5 rounded-lg bg-red-950/80 border border-red-500/30">🗑</button>
+                        </div>
+                    </td>
+                    <td class="py-3 px-2 text-center">
+                        <input type="checkbox" ${checkedAttr} onchange="toggleSelect(${it.id}, this.checked)">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function renderSubsPage() {
+            const box = document.getElementById('subsPageList');
+            box.innerHTML = '';
+            if (items.length === 0) {
+                box.innerHTML = '<div class="text-zinc-400 text-center py-8">هنوز لینک سابی ساخته نشده است.</div>';
+                return;
+            }
+            items.forEach(it => {
+                const daysLeft = Math.max(0, Math.ceil((it.expireAt - Date.now()) / 86400000));
+                const url = buildSubUrl(it);
+                const row = document.createElement('div');
+                row.className = 'p-3.5 rounded-2xl bg-black/45 border border-purple-900/35 flex flex-wrap items-center justify-between gap-2';
+                row.innerHTML = `
+                    <div class="min-w-0 flex-1">
+                        <div class="font-bold text-white">${it.name} <span class="text-[11px] text-purple-300">(${formatTrafficFromGB(it.trafficGB)} • ${daysLeft} روز)</span></div>
+                        <div class="font-mono text-[11px] text-zinc-400 truncate mt-1" dir="ltr">${url}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="navigator.clipboard.writeText('${url}');showToast('لینک ساب کپی شد')" class="px-3 py-1.5 rounded-xl bg-purple-600/35 border border-purple-400/40 text-white font-bold">کپی لینک</button>
+                        <a href="${url}" target="_blank" class="px-3 py-1.5 rounded-xl bg-blue-600/25 border border-blue-400/40 text-blue-200 font-bold">باز کردن</a>
+                    </div>
+                `;
+                box.appendChild(row);
+            });
+        }
+
+        function toggleOne(id) {
+            const it = items.find(x => x.id === id);
+            if (!it) return;
+            it.active = !it.active;
+            saveDb();
+        }
+
+        function openQr(id) {
+            const it = items.find(x => x.id === id);
+            if (!it) return;
+            const txt = buildConf(it);
+            document.getElementById('modalQrTitle').innerText = `QR Code - ${it.name}`;
+            document.getElementById('modalConfText').value = txt;
+            const box = document.getElementById('modalQrBox');
+            box.innerHTML = '';
+            new QRCode(box, { text: txt, width: 170, height: 170 });
+            document.getElementById('qrModal').classList.remove('hidden');
+            document.getElementById('qrModal').classList.add('flex');
+        }
+
+        function copyOne(id) {
+            const it = items.find(x => x.id === id);
+            if (!it) return;
+            navigator.clipboard.writeText(buildConf(it));
+            showToast(`کانفیگ ${it.name} کپی شد`);
+        }
+
+        function downloadOne(id) {
+            const it = items.find(x => x.id === id);
+            if (!it) return;
+            downloadConfFile(it.name, buildConf(it));
+            showToast(`فایل ${it.name}.conf دانلود شد`);
+        }
+
+        function deleteOne(id) {
+            items = items.filter(x => x.id !== id);
+            selectedIds.delete(id);
+            saveDb();
+            showToast('کانفیگ حذف شد و حجمش به پنل برگشت');
+        }
+
+        function toggleSelect(id, checked) {
+            if (checked) selectedIds.add(id);
+            else selectedIds.delete(id);
+        }
+
+        function toggleSelectAll(checked) {
+            selectedIds.clear();
+            if (checked) items.forEach(x => selectedIds.add(x.id));
+            renderList();
+        }
+
+        function toggleSelectedStatus() {
+            if (selectedIds.size === 0) return showToast('ابتدا کانفیگی را انتخاب کنید');
+            items.forEach(it => {
+                if (selectedIds.has(it.id)) it.active = !it.active;
+            });
+            saveDb();
+            showToast('وضعیت موارد انتخاب‌شده تغییر کرد');
+        }
+
+        function deleteSelectedConfigs() {
+            if (selectedIds.size === 0) return showToast('ابتدا کانفیگی را انتخاب کنید');
+            items = items.filter(it => !selectedIds.has(it.id));
+            selectedIds.clear();
+            document.getElementById('selectAllChk').checked = false;
+            saveDb();
+            showToast('موارد انتخاب‌شده حذف شدند');
+        }
+
+        function renewAllConfigs() {
+            if (items.length === 0) return showToast('کانفیگی برای تمدید وجود ندارد');
+            items.forEach(it => {
+                const base = Math.max(Date.now(), it.expireAt);
+                it.expireAt = base + 30 * 86400000;
+                it.active = true;
+            });
+            saveDb();
+            showToast('همه کانفیگ‌ها ۳۰ روز تمدید شدند');
+        }
+
+        function fillSettingsInputs() {
+            document.getElementById('srvMaxQuotaTB').value = srvCfg.maxQuotaTB || 100;
+            document.getElementById('srvIp').value = srvCfg.endpoint;
+            document.getElementById('srvPort').value = srvCfg.port;
+            document.getElementById('srvKey').value = srvCfg.publicKey;
+        }
+
+        function saveServerCfg() {
+            srvCfg.maxQuotaTB = Math.max(1, parseInt(document.getElementById('srvMaxQuotaTB').value, 10) || 100);
+            srvCfg.endpoint = document.getElementById('srvIp').value.trim() || srvCfg.endpoint;
+            srvCfg.port = parseInt(document.getElementById('srvPort').value, 10) || 35853;
+            srvCfg.publicKey = document.getElementById('srvKey').value.trim() || srvCfg.publicKey;
+            localStorage.setItem(SRV_KEY, JSON.stringify(srvCfg));
+            document.getElementById('endpointBadge').innerText = `${srvCfg.endpoint}:${srvCfg.port}`;
+            updateQuotaUI();
+            updateDashboardStats();
+            showToast('تنظیمات سرور و ظرفیت ۱۰۰ ترابایتی ذخیره شد');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+        }
+
+        function checkSubPage() {
+            const h = window.location.hash || '';
+            if (!h.startsWith('#sub=')) return false;
+
+            document.getElementById('lockScreen').classList.add('hidden');
+            document.getElementById('adminView').classList.add('hidden');
+            document.getElementById('subView').classList.remove('hidden');
+
+            try {
+                const raw = h.replace('#sub=', '');
+                const parsed = JSON.parse(decodeURIComponent(escape(atob(raw))));
+                const live = items.find(x => x.id === parsed.id);
+                if (live) {
+                    parsed.active = live.active ? 1 : 0;
+                    parsed.traffic = live.trafficGB;
+                    parsed.days = Math.max(0, Math.ceil((live.expireAt - Date.now()) / 86400000));
+                    parsed.users = live.users;
+                    parsed.pass = live.subPass || '';
+                    parsed.ip = live.ip;
+                    parsed.privateKey = live.privateKey;
+                    parsed.dns = live.dns || srvCfg.defaultDns;
+                    parsed.mtu = live.mtu || 1280;
+                    parsed.keepalive = live.keepalive ?? 11;
+                    parsed.allowedIps = live.allowedIps || srvCfg.defaultAllowedIps;
+                    parsed.endpoint = `${srvCfg.endpoint}:${srvCfg.port}`;
+                    parsed.publicKey = srvCfg.publicKey;
+                }
+                activeSubData = parsed;
+
+                if (!parsed.active) {
+                    document.getElementById('subErrorBox').classList.remove('hidden');
+                    return true;
+                }
+                if (parsed.pass) {
+                    document.getElementById('subPassBox').classList.remove('hidden');
+                } else {
+                    renderSubView();
+                }
+            } catch {
+                document.getElementById('subErrorBox').classList.remove('hidden');
+            }
+            return true;
+        }
+
+        function unlockSub() {
+            const val = document.getElementById('subPassInput').value;
+            if (val === activeSubData.pass) {
+                document.getElementById('subPassBox').classList.add('hidden');
+                renderSubView();
+            } else {
+                document.getElementById('subPassErr').classList.remove('hidden');
+            }
+        }
+
+        function getSubVariantText(variant) {
+            const d = activeSubData;
+            const isGame = variant !== 'web';
+            const mtu = isGame ? (d.mtu || 1280) : 1420;
+            const keepalive = isGame ? (d.keepalive ?? 11) : 25;
+            const allowedIps = isGame
+                ? (d.allowedIps || DEFAULT_GAME_ALLOWED_IPS)
+                : '0.0.0.0/0, ::/0';
+
+            return `[Interface]
+PrivateKey = ${d.privateKey}
+Address = ${d.ip || '10.132.150.4'}/32
+DNS = ${d.dns || '1.1.1.1, 1.0.0.1'}
+MTU = ${mtu}
+
+[Peer]
+PublicKey = ${d.publicKey || '30ORXJ0hLB01l7ERdCGW5O88EibHUvveeydipdGblyo='}
+Endpoint = ${d.endpoint || 'wg.parszone2.ir:35853'}
+AllowedIPs = ${allowedIps}
+PersistentKeepalive = ${keepalive}`;
+        }
+
+        function renderSubView() {
+            document.getElementById('subInfoBox').classList.remove('hidden');
+            const d = activeSubData;
+            const trafficText = formatTrafficFromGB(d.traffic || 1024);
+            const daysText = `${d.days ?? 30} روز`;
+
+            document.getElementById('svSummaryTraffic').innerText = trafficText;
+            document.getElementById('svSummaryDays').innerText = daysText;
+
+            document.getElementById('svCard1Title').innerText = `تانل گیمینگ (${d.name || 'VEXR'})`;
+            document.getElementById('svEndpoint1').innerText = d.endpoint || 'wg.parszone2.ir:35853';
+            document.getElementById('svTraffic1').innerText = `📦 ${trafficText}`;
+            document.getElementById('svDays1').innerText = `⏳ ${daysText}`;
+
+            document.getElementById('svCard2Title').innerText = `مستقیم تمام مسیر (${d.name || 'VEXR'})`;
+            document.getElementById('svDns2').innerText = d.dns || '1.1.1.1, 1.0.0.1';
+            document.getElementById('svTraffic2').innerText = `📦 ${trafficText}`;
+            document.getElementById('svDays2').innerText = `⏳ ${daysText}`;
+
+            document.getElementById('svCurrentSubLink').value = window.location.href;
+        }
+
+        function openSubQrModal(variant) {
+            if (!activeSubData) return;
+            const txt = getSubVariantText(variant);
+            const label = variant === 'web' ? 'مستقیم تمام مسیر' : 'تانل گیمینگ';
+            document.getElementById('modalQrTitle').innerText = `QR Code - ${label}`;
+            document.getElementById('modalConfText').value = txt;
+            const box = document.getElementById('modalQrBox');
+            box.innerHTML = '';
+            new QRCode(box, { text: txt, width: 170, height: 170 });
+            document.getElementById('qrModal').classList.remove('hidden');
+            document.getElementById('qrModal').classList.add('flex');
+        }
+
+        function downloadSubVariant(variant) {
+            if (!activeSubData) return;
+            const suffix = variant === 'web' ? 'Full' : 'Game';
+            const fname = `${activeSubData.name || 'VEXR'}-${suffix}`;
+            downloadConfFile(fname, getSubVariantText(variant));
+            showToast(`فایل ${fname}.conf دانلود شد`);
+        }
+
+        function copyActiveSubLink() {
+            const val = document.getElementById('svCurrentSubLink').value;
+            if (!val) return;
+            navigator.clipboard.writeText(val);
+            showToast('لینک اشتراک کپی شد');
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toTimeString().split(' ')[0];
+        }
+
+        function initAdminPanel() {
+            document.getElementById('cfgAllowedIps').value = srvCfg.defaultAllowedIps || DEFAULT_GAME_ALLOWED_IPS;
+            document.getElementById('endpointBadge').innerText = `${srvCfg.endpoint}:${srvCfg.port}`;
+            if (items.length > 0) {
+                latestCreated = items[0];
+                updateResultCard(items[0]);
+            }
+            updateQuotaUI();
+            updateDashboardStats();
+            renderList();
+            renderSubsPage();
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        if (!checkSubPage()) {
+            if (sessionStorage.getItem(AUTH_SESSION_KEY) === '1') {
+                document.getElementById('lockScreen').classList.add('hidden');
+                document.getElementById('adminView').classList.remove('hidden');
+                initAdminPanel();
+            }
+        }
+    </script>
+</body>
+</html>
